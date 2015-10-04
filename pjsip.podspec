@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "pjsip"
-  s.version      = "2.3.0.7"
+  s.version      = "2.4.5.0"
   s.summary      = "Open Source SIP, Media and NAT Traversal Library."
   s.homepage     = "http://www.pjsip.org"
   s.author       = 'www.pjsip.org'
@@ -24,38 +24,21 @@ PJSIP may include third party software in its source code distribution. Third Pa
 LICENSE
    }
 
-  s.public_header_files = 'build/pjproject/src/pjsip/include/**',
-                          'build/pjproject/src/pjlib/include/**',
-                          'build/pjproject/src/pjlib-util/include/**',
-                          'build/pjproject/src/pjnath/include/**',
-                          'build/pjproject/src/pjmedia/include/**'
+  s.source_files        = 'dist/include/**/*.{h,hpp}'
 
-  s.preserve_paths      = 'build/pjproject/src/pjsip/include/**/*',
-                          'build/pjproject/src/pjlib/include/**/*',
-                          'build/pjproject/src/pjlib-util/include/**/*',
-                          'build/pjproject/src/pjnath/include/**/*',
-                          'build/pjproject/src/pjmedia/include/**/*'
+  s.public_header_files = 'dist/include/**/*.{h,hpp}'
 
-  s.vendored_libraries  = 'build/openh264/lib/*.a',
-                          'build/pjproject/src/pjsip/lib/*.a',
-                          'build/pjproject/src/pjlib/lib/*.a',
-                          'build/pjproject/src/pjlib-util/lib/*.a',
-                          'build/pjproject/src/pjnath/lib/*.a',
-                          'build/pjproject/src/pjmedia/lib/*.a',
-                          'build/pjproject/src/third_party/lib/*.a'
+  s.vendored_libraries  = 'dist/lib/*.a'
 
-  header_search_paths   = '"$(PODS_ROOT)/pjsip/build/pjproject/src/pjsip/include"',
-                          '"$(PODS_ROOT)/pjsip/build/pjproject/src/pjlib/include"',
-                          '"$(PODS_ROOT)/pjsip/build/pjproject/src/pjlib-util/include"',
-                          '"$(PODS_ROOT)/pjsip/build/pjproject/src/pjnath/include"',
-                          '"$(PODS_ROOT)/pjsip/build/pjproject/src/pjmedia/include"'
+  s.preserve_paths      = 'dist/**'
 
-  s.xcconfig            = {'HEADER_SEARCH_PATHS'          => header_search_paths.join(' '),
-                           'GCC_PREPROCESSOR_DEFINITIONS' => 'PJ_AUTOCONF=1'}
+  # header_search_paths   = ['"$(PODS_ROOT)/dist/include"']
+
+  s.xcconfig            = {'GCC_PREPROCESSOR_DEFINITIONS' => 'PJ_AUTOCONF=1'}
 
   s.dependency            'OpenSSL-Universal', '1.0.1.l'
   s.frameworks          = 'CFNetwork', 'AudioToolbox', 'AVFoundation', 'CoreMedia'
   s.libraries           = 'stdc++'
-  s.header_mappings_dir = 'build/pjproject-2.3'
+  s.header_mappings_dir = 'dist/include'
   s.requires_arc        = false
 end

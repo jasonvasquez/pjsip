@@ -20,6 +20,34 @@ LIB_PATHS=("pjlib/lib" \
            "pjsip/lib" \
            "third_party/lib")
 
+LIPO_LIB_SUFFIX="apple-darwin_ios.a"
+LIPO_ARCHS=("armv7" \
+            "armv7s" \
+            "arm64" \
+            "i386" \
+            "x86_64")
+
+LIPO_LIBS=("pjlib/lib-ARCH/libpj" \
+           "pjlib-util/lib-ARCH/libpjlib-util" \
+           "pjmedia/lib-ARCH/libpjmedia" \
+           "pjmedia/lib-ARCH/libpjmedia" \
+           "pjmedia/lib-ARCH/libpjmedia-audiodev" \
+           "pjmedia/lib-ARCH/libpjmedia-codec" \
+           "pjmedia/lib-ARCH/libpjmedia-videodev" \
+           "pjmedia/lib-ARCH/libpjsdp" \
+           "pjnath/lib-ARCH/libpjnath" \
+           "pjsip/lib-ARCH/libpjsip" \
+           "pjsip/lib-ARCH/libpjsip-simple" \
+           "pjsip/lib-ARCH/libpjsip-ua" \
+           "pjsip/lib-ARCH/libpjsua" \
+           "pjsip/lib-ARCH/libpjsua2" \
+           "third_party/lib-ARCH/libg7221codec" \
+           "third_party/lib-ARCH/libgsmcodec" \
+           "third_party/lib-ARCH/libilbccodec" \
+           "third_party/lib-ARCH/libresample" \
+           "third_party/lib-ARCH/libspeex" \
+           "third_party/lib-ARCH/libsrtp")
+
 OPENSSL_PREFIX=
 OPENH264_PREFIX=
 while [ "$#" -gt 0 ]; do
@@ -163,40 +191,17 @@ function x86_64() {
 function lipo() {
     echo "Lipo libs..."
 
-    TMP=`mktemp -t lipo`
-    while [ $# -gt 0 ]; do
-        ARCH=$1
-        for LIB_DIR in ${LIB_PATHS[*]}; do
-            ARGS=""
-            DST_DIR="${PJSIP_DIR}/${LIB_DIR}"
-            SRC_DIR="${DST_DIR}-${ARCH}"
-
-            for FILE in `ls -l1 "${SRC_DIR}"`; do
-                OPTIONS="-arch ${ARCH} ${SRC_DIR}/${FILE}"
-                EXISTS=`cat "${TMP}" | grep "${FILE}"`
-                if [[ ${EXISTS} ]]; then
-                    SED_SRC="${FILE}$"
-                    SED_SRC="${SED_SRC//\//\\/}"
-                    SED_DST="${FILE} ${OPTIONS}"
-                    SED_DST="${SED_DST//\//\\/}"
-                    sed -i.bak "s/${SED_SRC}/${SED_DST}/" "${TMP}"
-                    rm "${TMP}.bak"
-
-                else
-                    echo "${OPTIONS}" >> "${TMP}"
-                fi
-            done
+    for LIB in ${LIPO_LIBS[*]}; do
+        CMD="xcrun -sdk iphoneos lipo "
+        for ARCH in ${LIPO_ARCHS[*]}; do
+            INFILE=`echo "${LIB}" | sed "s/ARCH/${ARCH}/"`
+            CMD="${CMD} -arch $ARCH ${PJSIP_DIR}/$INFILE-$ARCH-$LIPO_LIB_SUFFIX "
         done
-        shift
+        OUTPUT=`echo "${LIB}" | awk -F "/" '{print $3}'`
+        OUTPUT="${OUTPUT}-universal-${LIPO_LIB_SUFFIX}"
+        CMD="${CMD} -create -output ${PJSIP_DIR}/lib/${OUTPUT}"
+        `${CMD}`
     done
-
-    while read LINE; do
-        COMPONENTS=($LINE)
-        LAST=${COMPONENTS[@]:(-1)}
-        PREFIX=$(dirname $(dirname "${LAST}"))
-        OUTPUT="${PREFIX}/lib/`basename ${LAST}`"
-        xcrun -sdk iphoneos lipo ${LINE} -create -output ${OUTPUT}
-    done < "${TMP}"
 }
 
 download "${PJSIP_URL}" "${PJSIP_DIR}"

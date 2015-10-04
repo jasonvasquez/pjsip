@@ -5,10 +5,12 @@ function realpath { echo $(cd $(dirname "$1"); pwd)/$(basename "$1"); }
 __FILE__=`realpath "$0"`
 __DIR__=`dirname "${__FILE__}"`
 
-BUILD_DIR="${__DIR__}/build"
+BUILD_DIR="${__DIR__}/work"
 if [ ! -d ${BUILD_DIR} ]; then
     mkdir ${BUILD_DIR}
 fi
+
+DIST_DIR="${__DIR__}/dist"
 
 # download
 function download() {
@@ -54,6 +56,11 @@ function pjsip() {
     "${__DIR__}/pjsip.sh" "${PJSIP_DIR}" --with-openssl "${OPENSSL_DIR}" --with-openh264 "${OPENH264_DIR}"
 }
 
+function dist() {
+    "${__DIR__}/dist.sh" "${BUILD_DIR}" "${DIST_DIR}"
+}
+
 openssl
 openh264
 pjsip
+dist
