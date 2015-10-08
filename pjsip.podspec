@@ -37,6 +37,7 @@ LICENSE
   s.xcconfig            = {'GCC_PREPROCESSOR_DEFINITIONS' => 'PJ_AUTOCONF=1'}
 
   s.dependency            'OpenSSL-Universal', '1.0.1.l'
+  s.dependency            'CocoaFFmpeg', '2.2.0'
   s.frameworks          = 'CFNetwork', 'AudioToolbox', 'AVFoundation', 'CoreMedia'
   s.libraries           = 'stdc++'
   s.header_mappings_dir = 'dist/include'

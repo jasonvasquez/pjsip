@@ -17,6 +17,20 @@ function download() {
     "${__DIR__}/download.sh" "$1" "$2" #--no-cache
 }
 
+# ffmpeg
+FFMPEG_DIR="${BUILD_DIR}/ffmpeg"
+FFMPEG_ENABLED=
+function ffmpeg() {
+
+    if [ ! -f "${FFMPEG_DIR}/src/universal/lib/libavcodec.a" ]; then
+        "${__DIR__}/ffmpeg.sh" "${FFMPEG_DIR}"
+    else
+        echo "Using existing ffmpeg..."
+    fi
+
+    FFMPEG_ENABLED=1
+}
+
 # openssl
 OPENSSL_DIR="${BUILD_DIR}/openssl"
 OPENSSL_ENABLED=
@@ -53,7 +67,7 @@ function openh264() {
 
 PJSIP_DIR="${BUILD_DIR}/pjproject"
 function pjsip() {
-    "${__DIR__}/pjsip.sh" "${PJSIP_DIR}" --with-openssl "${OPENSSL_DIR}" --with-openh264 "${OPENH264_DIR}"
+    "${__DIR__}/pjsip.sh" "${PJSIP_DIR}" --with-openssl "${OPENSSL_DIR}" --with-openh264 "${OPENH264_DIR}" --with-ffmpeg "${FFMPEG_DIR}/src/universal"
 }
 
 function dist() {
@@ -62,5 +76,6 @@ function dist() {
 
 openssl
 openh264
+ffmpeg
 pjsip
 dist

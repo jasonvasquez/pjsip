@@ -10,6 +10,8 @@ function download() {
     "${__DIR__}/download.sh" "$1" "$2" #--no-cache
 }
 
+NUMCORES=`sysctl -n hw.logicalcpu`
+
 BASE_DIR="$1"
 PJSIP_URL="http://www.pjsip.org/release/2.4.5/pjproject-2.4.5.tar.bz2"
 PJSIP_DIR="$1/src"
@@ -50,6 +52,7 @@ LIPO_LIBS=("pjlib/lib-ARCH/libpj" \
 
 OPENSSL_PREFIX=
 OPENH264_PREFIX=
+FFMPEG_PREFIX=
 while [ "$#" -gt 0 ]; do
     case $1 in
         --with-openssl)
@@ -72,6 +75,16 @@ while [ "$#" -gt 0 ]; do
                 exit 1
             fi
             ;;
+        --with-ffmpeg)
+            if [ "$#" -gt 1 ]; then
+                FFMPEG_PREFIX=$2
+                shift 2
+                continue
+            else
+                echo 'ERROR: Must specify a non-empty "--with-ffmpeg PREFIX" argument.' >&2
+                exit 1
+            fi
+            ;;
     esac
 
     shift
@@ -82,7 +95,7 @@ function config_site() {
     PJSIP_CONFIG_PATH="${SOURCE_DIR}/pjlib/include/pj/config_site.h"
     HAS_VIDEO=
 
-    echo "Creating config.h..."
+    echo "Creating config_site.h..."
 
     if [ -f "${PJSIP_CONFIG_PATH}" ]; then
         rm "${PJSIP_CONFIG_PATH}"
@@ -131,6 +144,9 @@ function _build() {
     if [[ ${OPENH264_PREFIX} ]]; then
         CONFIGURE="${CONFIGURE} --with-openh264=${OPENH264_PREFIX}"
     fi
+    if [[ ${FFMPEG_PREFIX} ]]; then
+        CONFIGURE="${CONFIGURE} --with-ffmpeg=${FFMPEG_PREFIX}"
+    fi
 
     # flags
     if [[ ! ${CFLAGS} ]]; then
@@ -145,7 +161,12 @@ function _build() {
     fi
     if [[ ${OPENH264_PREFIX} ]]; then
         export CFLAGS="${CFLAGS} -I${OPENH264_PREFIX}/include"
-        export LDFLAGS="${LDFLAGS} -L${OPENH264_PREFIX}/lib"
+        export LDFLAGS="${LDFLAGS} -L${OPENH264_PREFIX}/lib -lopenh264"
+    fi
+    if [[ ${FFMPEG_PREFIX} ]]; then
+        export PKG_CONFIG="none"
+        export CFLAGS="${CFLAGS} -I${FFMPEG_PREFIX}/include"
+        export LDFLAGS="${LDFLAGS} -L${FFMPEG_PREFIX}/lib -lz -lbz2 -lavcodec -lavformat -lavutil -lswscale"
     fi
     export LDFLAGS="${LDFLAGS} -lstdc++"
 
@@ -155,7 +176,7 @@ function _build() {
     ARCH="-arch ${ARCH}" ${CONFIGURE} >> ${LOG} 2>&1
     make dep >> ${LOG} 2>&1
     make clean >> ${LOG}
-    make >> ${LOG} 2>&1
+    make -j$NUMCORES >> ${LOG} 2>&1
 
     copy_libs ${ARCH}
 }
@@ -206,5 +227,9 @@ function lipo() {
 
 download "${PJSIP_URL}" "${PJSIP_DIR}"
 config_site "${PJSIP_DIR}"
-armv7 && armv7s && arm64 && i386 && x86_64
-lipo armv7 armv7s arm64 i386 x86_64
+armv7
+armv7s
+arm64
+i386
+x86_64
+lipo
